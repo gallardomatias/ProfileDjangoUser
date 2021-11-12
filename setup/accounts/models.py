@@ -14,6 +14,7 @@ CHOICES_OPTIONS = (
 
 class User(AbstractUser):
     tipo_perf = models.CharField(max_length=1, choices=CHOICES_OPTIONS)
+    REQUIRED_FIELDS = ['tipo_perf']
 
 class Profile(models.Model):
     #OneToOneField significara que un perfil tiene un usuario
@@ -55,25 +56,34 @@ class Cliente(models.Model):
         return self.profile.user.username
 
 class Profesional(models.Model):
-    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='profile_name')
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='perfil')
     def __str__(self):
         return self.profile.user.username
 
 #Manera de asignar un perfil a un cliente cuando es registrado
 def create_profile_client(sender, instance, created, **kwargs):
-    
-    if User.objects.all(tipo_perf=2):
+    if User.objects.all().filter(tipo_perf='3'):
         if created:
-            Profesional.objects.create(profile=instance)
-    elif User.objects.all(tipo_perf=3):
-        if created:
-            Cliente.objects.create(profile=instance)
-
+            Cliente.objects.create(perfc=instance)
 
 def save_profile_client(sender, instance, **kwargs):
         instance.profile.save()
 
+   
 #created_client
 post_save.connect(create_profile_client, sender=Profile)
 #save_cliente
+post_save.connect(save_profile_client, sender=Profile)
+
+#Manera de asignar un perfil a un profesional cuando es registrado
+def create_profile_prof(sender,instance,created,**kwargs):
+    if User.objects.all().filter(tipo_perf ='2'):
+        if created:
+            Profesional.objects.create(perf=instance)
+
+def save_profile_client(sender, instance, **kwargs):
+        instance.perfil.save()
+#created_prof
+post_save.connect(create_profile_prof, sender=Profile)
+#save_prof
 post_save.connect(save_profile_client, sender=Profile)

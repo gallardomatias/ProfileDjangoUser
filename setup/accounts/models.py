@@ -7,9 +7,10 @@ from django.db.models.signals import post_save
 
 #Extensión del usuario
 CHOICES_OPTIONS = (
-    ('1', "Administrador"),
-    ('2', "Profesional"),
-    ('3', "Cliente"),
+
+    ('1', "Profesional"),
+    ('2', "Cliente"),
+    ('3', "Administrador"),
     ) 
 
 class User(AbstractUser):
@@ -24,7 +25,6 @@ class Profile(models.Model):
     # null=True Si es True, Django almacenará valores vacíos como NULL en la base de datos. El valor predeterminado es falso.
     #blank=True Si es Verdadero, se permite que el campo esté en blanco. El valor predeterminado es falso.
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    group = models.ForeignKey(Group,on_delete=models.DO_NOTHING)
     rut = models.CharField(max_length=12, null=True, blank=True)
     telefono = models.CharField(max_length=12, null=True, blank=True)
     direccion = models.CharField(max_length=200,null=True, blank=True)
@@ -63,18 +63,24 @@ class Profesional(models.Model):
     def __str__(self):
         return self.profile.user.username
 
+class Administrador(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE,related_name='administrator')
+    def __str__(self):
+        return self.profile.user.username
 
 def create_profile_client(sender,instance, created,**kwargs):
     if created: 
-        if User.objects.all().filter(tipo_perf='2'):
+        if User.objects.all().filter(tipo_perf='1'):
             Profesional.objects.create(profile=instance)
             instance.professional.save()
-        elif User.objects.all().filter(tipo_perf='3'):
+        elif User.objects.all().filter(tipo_perf='2'):
             Cliente.objects.create(profile=instance)
             instance.client.save()
+        else: 
+            Administrador.objects.create(profile=instance)
+            instance.administrator.save()
 
-#def save_profile_client(sender, instance,**kwargs):
-    
+
 
 post_save.connect(create_profile_client,sender = Profile)
 #post_save.connect(save_profile_client,sender = Profile)

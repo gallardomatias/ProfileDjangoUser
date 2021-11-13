@@ -24,6 +24,7 @@ class Profile(models.Model):
     # null=True Si es True, Django almacenará valores vacíos como NULL en la base de datos. El valor predeterminado es falso.
     #blank=True Si es Verdadero, se permite que el campo esté en blanco. El valor predeterminado es falso.
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    group = models.ForeignKey(Group,on_delete=models.DO_NOTHING)
     rut = models.CharField(max_length=12, null=True, blank=True)
     telefono = models.CharField(max_length=12, null=True, blank=True)
     direccion = models.CharField(max_length=200,null=True, blank=True)
@@ -40,50 +41,44 @@ def create_user_profile(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
 
 def save_user_profile(sender, instance, **kwargs):
-        instance.profile.save()
+    instance.profile.save()
 #created_profile
 post_save.connect(create_user_profile, sender=User)
 #save_profile
 post_save.connect(save_user_profile, sender=User)
 
+
+##################################################################################################
 #extension del perfil de usuario a un cliente y profesional
 
 class Cliente(models.Model):
-    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='profile')
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE,related_name='client')
     razon_social = models.CharField(max_length=50)
 
     def __str__(self):
         return self.profile.user.username
 
 class Profesional(models.Model):
-    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='perfil')
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE,related_name='professional')
     def __str__(self):
         return self.profile.user.username
 
-#Manera de asignar un perfil a un cliente cuando es registrado
-def create_profile_client(sender, instance, created, **kwargs):
-    if User.objects.all().filter(tipo_perf='3'):
-        if created:
-            Cliente.objects.create(perfc=instance)
 
-def save_profile_client(sender, instance, **kwargs):
-        instance.profile.save()
+def create_profile_client(sender,instance, created,**kwargs):
+    if created: 
+        if User.objects.all().filter(tipo_perf='2'):
+            Profesional.objects.create(profile=instance)
+            instance.professional.save()
+        elif User.objects.all().filter(tipo_perf='3'):
+            Cliente.objects.create(profile=instance)
+            instance.client.save()
 
-   
-#created_client
-post_save.connect(create_profile_client, sender=Profile)
-#save_cliente
-post_save.connect(save_profile_client, sender=Profile)
+#def save_profile_client(sender, instance,**kwargs):
+    
 
-#Manera de asignar un perfil a un profesional cuando es registrado
-def create_profile_prof(sender,instance,created,**kwargs):
-    if User.objects.all().filter(tipo_perf ='2'):
-        if created:
-            Profesional.objects.create(perf=instance)
+post_save.connect(create_profile_client,sender = Profile)
+#post_save.connect(save_profile_client,sender = Profile)
 
-def save_profile_client(sender, instance, **kwargs):
-        instance.perfil.save()
-#created_prof
-post_save.connect(create_profile_prof, sender=Profile)
-#save_prof
-post_save.connect(save_profile_client, sender=Profile)
+##########################################################################
+
+

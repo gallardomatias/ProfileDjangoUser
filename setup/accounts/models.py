@@ -68,6 +68,21 @@ class Administrador(models.Model):
     def __str__(self):
         return self.profile.user.username
 
+def create_profile_client(sender,instance, created,**kwargs):
+    if created: 
+        if instance.user.tipo_perf=='1':
+            Profesional.objects.create(profile=instance)
+            instance.professional.save()
+        elif instance.user.tipo_perf=='2':
+            Cliente.objects.create(profile=instance)
+            instance.client.save()
+        elif instance.user.tipo_perf=='3':
+            Administrador.objects.create(profile=instance)
+            instance.administrator.save()
+
+
+
+post_save.connect(create_profile_client,sender = Profile)
+#post_save.connect(save_profile_client,sender = Profile)
+
 ##########################################################################
-
-

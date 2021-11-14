@@ -2,8 +2,8 @@ from django.db.models import query
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 from django.contrib.auth.models import User
-from rest_framework.decorators import authentication_classes, renderer_classes
-
+from rest_framework.decorators import authentication_classes, permission_classes, renderer_classes
+from rest_framework.permissions import IsAuthenticated
 from .models import Profile
 
 #Django Rest Framework
@@ -125,6 +125,8 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class= serializers.UserSerializer
     queryset = models.User.objects.all()
     authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
 
 class UserLoginApiView(ObtainAuthToken):
     """Crea Tokens de autenticacion de usuario"""
